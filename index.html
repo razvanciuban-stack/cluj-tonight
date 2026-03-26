@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cluj</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2752599843508203" crossorigin="anonymous"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -266,10 +267,13 @@
       var seconds = 5;
       overlay.innerHTML =
         '<div class="ad-timer">Redirecting in <span id="ad-count">' + seconds + '</span>s</div>' +
-        '<div class="ad-slot"><!-- Ad space: replace with your ad code or affiliate banner -->' +
-        'Your ad here</div>' +
+        '<div class="ad-slot">' +
+        '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2752599843508203" data-ad-slot="auto" data-ad-format="rectangle" data-full-width-responsive="false"></ins>' +
+        '</div>' +
         '<div class="ad-skip" id="ad-skip">Wait ' + seconds + 's...</div>';
       document.body.appendChild(overlay);
+
+      try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
 
       var counter = document.getElementById('ad-count');
       var skipBtn = document.getElementById('ad-skip');
