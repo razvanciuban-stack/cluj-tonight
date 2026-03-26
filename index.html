@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cluj Tonight</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+    }
+    .header {
+      text-align: center;
+      padding: 24px 16px 16px;
+      border-bottom: 1px solid #222;
+    }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .header p {
+      color: #555;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+    .event-list { padding: 0 16px; }
+    .event {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #151515;
+      text-decoration: none;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .event:active { opacity: 0.6; }
+    .event-info { flex: 1; min-width: 0; }
+    .event-name {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .event-meta {
+      color: #555;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    .event-countdown {
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #555;
+      font-size: 14px;
+      text-align: center;
+      padding: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>CLUJ TONIGHT</h1>
+    <p>Next 4 hours</p>
+  </div>
+  <div id="app">
+    <div class="state">Loading...</div>
+  </div>
+
+  <script>
+    const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    const WINDOW_HOURS = 4;
+
+    function formatCountdown(ms) {
+      const minutes = Math.floor(ms / 60000);
+      if (minutes < 5) return 'now';
+      if (minutes < 60) return minutes + 'm';
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      if (hours < 2 && remainingMinutes > 0) return hours + 'h ' + remainingMinutes + 'm';
+      return hours + 'h';
+    }
+
+    function formatTime(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatPrice(price) {
+      if (!price) return 'Pret indisponibil';
+      if (price === '0') return 'Gratuit';
+      return price + ' lei';
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+
+    function renderEvents(events) {
+      const app = document.getElementById('app');
+      const now = Date.now();
+      const windowEnd = now + WINDOW_HOURS * 60 * 60 * 1000;
+
+      const filtered = events
+        .map(function(e) { return Object.assign({}, e, { _ts: new Date(e.date).getTime() }); })
+        .filter(function(e) { return e._ts > now && e._ts <= windowEnd; })
+        .sort(function(a, b) { return a._ts - b._ts; });
+
+      if (filtered.length === 0) {
+        app.innerHTML = '<div class="state">No events in the next 4 hours</div>';
+        return;
+      }
+
+      var html = '<div class="event-list">' + filtered.map(function(e) {
+        var countdown = formatCountdown(e._ts - now);
+        var time = formatTime(e.date);
+        var price = formatPrice(e.price);
+        return '<a class="event" href="' + esc(e.url) + '" target="_blank" rel="noopener">' +
+          '<div class="event-info">' +
+            '<div class="event-name">' + esc(e.name) + '</div>' +
+            '<div class="event-meta">' + esc(e.venue) + ' · ' + time + ' · ' + price + '</div>' +
+          '</div>' +
+          '<div class="event-countdown">' + countdown + '</div>' +
+        '</a>';
+      }).join('') + '</div>';
+
+      app.innerHTML = html;
+    }
+
+    async function load() {
+      try {
+        var res = await fetch('data/events.json');
+        if (!res.ok) throw new Error('fetch failed');
+        var events = await res.json();
+        renderEvents(events);
+      } catch (e) {
+        document.getElementById('app').innerHTML =
+          '<div class="state">Could not load events</div>';
+      }
+    }
+
+    load();
+    setInterval(load, REFRESH_INTERVAL);
+  </script>
+</body>
+</html>
