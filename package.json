@@ -1,0 +1,15 @@
+{
+  "name": "cluj-tonight",
+  "version": "1.0.0",
+  "description": "Events in Cluj-Napoca starting in the next 4 hours",
+  "type": "module",
+  "scripts": {
+    "scrape": "node scraper.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0"
+  }
+}
