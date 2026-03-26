@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cluj Tonight</title>
+  <title>Cluj</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -85,11 +85,54 @@
       margin-left: 12px;
       text-align: right;
     }
+    .ad-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .ad-overlay .ad-timer {
+      color: #555;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .ad-overlay .ad-slot {
+      width: 100%;
+      max-width: 320px;
+      min-height: 250px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .ad-overlay .ad-skip {
+      color: #555;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 8px 16px;
+    }
+    .ad-overlay .ad-skip.active {
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>CLUJ TONIGHT</h1>
+    <h1>CLUJ</h1>
     <p>Next 4 hours</p>
   </div>
   <div id="app">
@@ -139,9 +182,14 @@
       return d.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
     }
 
+    function cleanName(name) {
+      return (name || '').replace(/^Cluj-Napoca:\s*/i, '').replace(/^Cluj:\s*/i, '');
+    }
+
     function renderEventRow(e, now, showCountdown) {
       var time = formatTime(e.date);
       var price = formatPrice(e.price);
+      var name = cleanName(e.name);
       var right = '';
       if (showCountdown) {
         var countdown = formatCountdown(e._ts - now);
@@ -149,10 +197,10 @@
       } else {
         right = '<div class="event-date">' + time + '</div>';
       }
-      return '<a class="event" href="' + esc(e.url) + '" target="_blank" rel="noopener">' +
+      return '<a class="event" href="' + esc(e.url) + '" target="_blank" rel="noopener" onclick="showAd(event, this)">' +
         '<div class="event-info">' +
-          '<div class="event-name">' + esc(e.name) + '</div>' +
-          '<div class="event-meta">' + esc(e.venue) + ' · ' + time + ' · ' + price + '</div>' +
+          '<div class="event-name">' + esc(name) + '</div>' +
+          '<div class="event-meta">' + esc(e.venue) + ', Cluj-Napoca · ' + time + ' · ' + price + '</div>' +
         '</div>' +
         right +
       '</a>';
@@ -208,6 +256,37 @@
         document.getElementById('app').innerHTML =
           '<div class="state">Could not load events</div>';
       }
+    }
+
+    function showAd(evt, el) {
+      evt.preventDefault();
+      var url = el.getAttribute('href');
+      var overlay = document.createElement('div');
+      overlay.className = 'ad-overlay';
+      var seconds = 5;
+      overlay.innerHTML =
+        '<div class="ad-timer">Redirecting in <span id="ad-count">' + seconds + '</span>s</div>' +
+        '<div class="ad-slot"><!-- Ad space: replace with your ad code or affiliate banner -->' +
+        'Your ad here</div>' +
+        '<div class="ad-skip" id="ad-skip">Wait ' + seconds + 's...</div>';
+      document.body.appendChild(overlay);
+
+      var counter = document.getElementById('ad-count');
+      var skipBtn = document.getElementById('ad-skip');
+      var interval = setInterval(function() {
+        seconds--;
+        counter.textContent = seconds;
+        skipBtn.textContent = seconds > 0 ? 'Wait ' + seconds + 's...' : '';
+        if (seconds <= 0) {
+          clearInterval(interval);
+          skipBtn.textContent = 'Go to tickets →';
+          skipBtn.className = 'ad-skip active';
+          skipBtn.onclick = function() {
+            document.body.removeChild(overlay);
+            window.open(url, '_blank');
+          };
+        }
+      }, 1000);
     }
 
     load();
