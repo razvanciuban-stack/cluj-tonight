@@ -275,7 +275,7 @@
         '<div class="ad-slot">' +
         '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-3601532085875516" data-ad-slot="auto" data-ad-format="rectangle" data-full-width-responsive="false"></ins>' +
         '</div>' +
-        '<div class="ad-skip" id="ad-skip">Wait ' + seconds + 's...</div>';
+        '<a class="ad-skip" id="ad-skip" style="pointer-events:none;">Wait ' + seconds + 's...</a>';
       document.body.appendChild(overlay);
 
       try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
@@ -290,10 +290,10 @@
           clearInterval(interval);
           skipBtn.textContent = 'Go to tickets →';
           skipBtn.className = 'ad-skip active';
-          skipBtn.onclick = function() {
-            document.body.removeChild(overlay);
-            window.open(url, '_blank');
-          };
+          skipBtn.href = url;
+          skipBtn.target = '_blank';
+          skipBtn.rel = 'noopener';
+          skipBtn.style.pointerEvents = 'auto';
         }
       }, 1000);
     }
